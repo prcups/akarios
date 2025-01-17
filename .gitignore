@@ -1,4 +1,7 @@
 *.o
 *.kdev4
 .kdev4/
+loader/loader.efi
 kernel/kernel.elf
+kernel/kernel.bin
+akarios.img
