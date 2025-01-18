@@ -3,9 +3,9 @@ LDFLAGS = -shared -Bsymbolic -L/usr/lib -T/usr/lib/elf_loongarch64_efi.lds /usr/
 LOADLIBES = -lefi -lgnuefi
 FORMAT = --target efi-app-loongarch64 --subsystem=10
 
-CC = gcc
-LD = ld
-OBJCOPY = objcopy
+CC = $(PREFIX)gcc
+LD = $(PREFIX)ld
+OBJCOPY = $(PREFIX)objcopy
 
 .PHONY: all
 all: loader.efi

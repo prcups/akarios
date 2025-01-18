@@ -44,9 +44,9 @@ void MMU::AddItem(u64 vaddr, u64 paddr, ZoneConfig &config)
     setConfig(p4, config);
     setConfig(p5, config);
     p4->pa = (paddr >> 12);
-    __ldpte_d(p4, 0);
+    __ldpte_d((long) p4, 0);
     p5->pa = (paddr >> 12) + 1;
-    __ldpte_d(p5, 1);
+    __ldpte_d((long) p5, 1);
 }
 
 void MMU::DeleteItem(u64 vaddr)

@@ -8,10 +8,11 @@ loader:
 kernel:
 	make -C kernel
 
-img: loader
-	dd if=/dev/zero of=akarios.img bs=1k count=1440
-	mformat -i akarios.img -f 1440 ::
+img: loader kernel
+	dd if=/dev/zero of=akarios.img bs=16k count=1024
+	mformat -i akarios.img ::
 	mcopy -i akarios.img loader/loader.efi ::/
+	mcopy -i akarios.img kernel/kernel.bin ::/
 
 qemu: img
 	qemu-system-loongarch64 \

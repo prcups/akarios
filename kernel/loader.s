@@ -14,8 +14,5 @@ _start:
 	li.d	$t0, 0x10
 	csrwr	$t0, 0x0
 
-	li.d	$sp, 0xA00000
 	la.local	$t1, KernelMain
-	li.d	$t0, 0xFFFFFFF
-	and		$t1, $t1, $t0
 	jr $t1

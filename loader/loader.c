@@ -99,7 +99,7 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
   kernel_main = (VOID*) buffer;
 
   if(status == EFI_SUCCESS)
-    Print(L"Parsed kernel size: %d start of elf in memory: %llx kernel_main at: %llx\n", kernel_size, buffer, kernel_main);
+    Print(L"Parsed kernel size: %d start of binary in memory: %llx kernel_main at: %llx\n", kernel_size, buffer, kernel_main);
 
 
   status = uefi_call_wrapper(gBS->AllocatePool, 3, EfiBootServicesData, sizeof(EFI_TIME), (VOID **)&time);
