@@ -131,8 +131,10 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
 
   __asm__ volatile (
       "ld.d $sp, %0\n"
-      "jirl $zero, %1\n"
-      ::"m"(boot_info), "m"(kernel_main));
+      "ld.d $t0, %1\n"
+      "jr $t0\n"
+      ::"m"(boot_info), "m"(kernel_main)
+      :"$sp", "$t0");
 
   return EFI_SUCCESS;
 }
