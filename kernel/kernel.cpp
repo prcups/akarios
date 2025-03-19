@@ -4,13 +4,11 @@
 #include <exception.h>
 #include <larchintrin.h>
 #include <timer.h>
-#include <lwp.h>
-#include <sdcard.h>
-#include <fat32.h>
+#include <process.h>
 
 const u64 vaddrEnd = 1ull << (getPartical(getCPUCFG(1), 19, 12) - 1);
 
-UART uPut((u8 *)(0x800000001ff40800llu));
+UART uPut((u8 *)(0x800000001fe001e0llu));
 Exception SysException;
 Timer SysTimer;
 
@@ -23,6 +21,7 @@ SlabAllocator defaultSlabAllocator;
 
 ProcessController processController;
 SDCard sdcard((void*)0x800000001ff64000, (void*) 0x800000001fe10c30);
+
 
 extern "C" {
     void handleDefaultException() {
@@ -63,18 +62,17 @@ inline void initException() {
 
 extern "C" void KernelMain() {
     invokeInit();
-    initMem();
-    initException();
-
-
-    fat32_mount();
-
-    ELFProgram program("open");
-    program.CreateProcess();
-
-    SysTimer.TimerOn();
-    extern void StartProcess();
-    StartProcess();
+    uPut << "Hello World!\n";
+    // initMem();
+    // initException();
+    //
+    //
+    // ELFProgram program("open");
+    // program.CreateProcess();
+    //
+    // SysTimer.TimerOn();
+    // extern void StartProcess();
+    // StartProcess();
 
     while (1);
 }

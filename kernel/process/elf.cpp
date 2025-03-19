@@ -1,4 +1,4 @@
-#include <lwp.h>
+#include <process.h>
 
 ELFProgram::ELFProgram(const char* filename) {
     file *f = new file;

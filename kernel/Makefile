@@ -10,7 +10,7 @@ SOURCES = $(wildcard uart/*.cpp \
 		     util/*.cpp \
 		     exception/*.cpp \
 		     timer/*.cpp \
-		     lwp/*.cpp \
+		     process/*.cpp \
 		     sdcard/*.cpp \
 		     fs/*.cpp \
 	   )
