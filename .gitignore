@@ -4,4 +4,5 @@
 loader/loader.efi
 kernel/kernel.elf
 kernel/kernel.bin
+3rdparty/gnu-efi/loongarch64
 akarios.img

@@ -17,7 +17,7 @@ img: loader kernel
 qemu: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
-	-serial stdio \
+	--nographic \
 	-drive format=raw,file=akarios.img \
 	-device virtio-gpu-pci \
 	-device nec-usb-xhci,id=xhci,addr=0x1b \
@@ -27,7 +27,7 @@ qemu: img
 qemu-debug: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
-	-serial stdio \
+	--nographic \
 	-drive format=raw,file=akarios.img \
 	-device virtio-gpu-pci \
 	-device nec-usb-xhci,id=xhci,addr=0x1b \

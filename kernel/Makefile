@@ -12,7 +12,6 @@ SOURCES = $(wildcard uart/*.cpp \
 		     timer/*.cpp \
 		     process/*.cpp \
 		     sdcard/*.cpp \
-		     fs/*.cpp \
 	   )
 
 OBJS = loader.o exception/context.o $(SOURCES:%.cpp=%.o)

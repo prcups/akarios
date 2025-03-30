@@ -1,5 +1,5 @@
-#include <efi/efi.h>
-#include <efi/efilib.h>
+#include <efi.h>
+#include <efilib.h>
 
 #define PAGE_SIZE     4096
 #define KERNEL_ADDR   0xA00000

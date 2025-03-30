@@ -20,8 +20,6 @@ SlabArea defaultSlabZone;
 SlabAllocator defaultSlabAllocator;
 
 ProcessController processController;
-SDCard sdcard((void*)0x800000001ff64000, (void*) 0x800000001fe10c30);
-
 
 extern "C" {
     void handleDefaultException() {
