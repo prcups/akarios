@@ -1,9 +1,10 @@
 .PHONY: clean
 
-CXX = $(PREFIX)g++
-OBJCOPY = $(PREFIX)objcopy
-CXXFLAGS = -march=loongarch64 -mabi=lp64d -g -std=c++20 -fno-stack-protector -nostartfiles -Iinclude -fno-rtti -fno-exceptions
-LDFLAGS = -Tkernel.ld -g -std=c++20 -fno-stack-protector -nostartfiles -fno-rtti -fno-exceptions
+CXX = clang
+LD = ld.lld
+OBJCOPY = llvm-objcopy
+CXXFLAGS = -g -std=c++20 -Iinclude -stdlib=libc++ --target=loongarch64-unknown-linux -fno-rtti -fno-exceptions
+LDFLAGS = -Tkernel.ld -g
 SOURCES = $(wildcard uart/*.cpp \
 		     mem/*.cpp \
 		     kernel.cpp \
@@ -17,7 +18,7 @@ SOURCES = $(wildcard uart/*.cpp \
 OBJS = loader.o exception/context.o $(SOURCES:%.cpp=%.o)
 
 kernel: $(OBJS)
-	$(CXX) $^ -o kernel.elf $(LDFLAGS)
+	$(LD) $^ -o kernel.elf $(LDFLAGS)
 	$(OBJCOPY) kernel.elf -O binary kernel.bin
 
 %.o: %.cpp

@@ -22,6 +22,8 @@ SlabAllocator defaultSlabAllocator;
 ProcessController processController;
 
 extern "C" {
+    void __cxa_pure_virtual() {}
+
     void handleDefaultException() {
         SysException.HandleDefaultException();
     }

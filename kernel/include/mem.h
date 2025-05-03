@@ -5,6 +5,7 @@
 #include <uart.h>
 #include <tree.h>
 #include <larchintrin.h>
+#include <new>
 
 #define PAGE_GROUP_SIZE_BIT 12
 #define PAGE_SIZE_BIT 12

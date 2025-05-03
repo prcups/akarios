@@ -1,7 +1,6 @@
 #ifndef TREE_H
 #define TREE_H
 
-#include <functional>
 #include <util.h>
 
 template <typename TVal>
@@ -27,8 +26,10 @@ class Tree {
 	void splay(TNode<TVal>* t, TNode<TVal>* p);
 	void deleteNode(TNode<TVal> *node);
 public:
-	TNode<TVal>* find(std::function<u8 (TVal *)> check);
-	void insert(TNode<TVal>* node, std::function<bool (TVal *)> check);
+	template <typename TFunc>
+	TNode<TVal>* find(TFunc check);
+	template <typename TFunc>
+	void insert(TNode<TVal>* node, TFunc check);
 	void ListTree();
 	~Tree();
 };
@@ -64,7 +65,8 @@ void Tree< TVal >::splay(TNode< TVal >* t, TNode< TVal >* p)
 }
 
 template <typename TVal>
-TNode<TVal> * Tree<TVal>::find(std::function<u8 (TVal *)> check)
+template <typename TFunc>
+TNode<TVal> * Tree<TVal>::find(TFunc check)
 {
 	TNode<TVal> *pt = root;
 	while (pt != nullptr) {
@@ -83,7 +85,8 @@ TNode<TVal> * Tree<TVal>::find(std::function<u8 (TVal *)> check)
 }
 
 template<typename TVal>
-void Tree<TVal>::insert(TNode<TVal>* node, std::function<bool (TVal *)> check)
+template <typename TFunc>
+void Tree<TVal>::insert(TNode<TVal>* node, TFunc check)
 {
 	TNode<TVal> *pt = root, *f = nullptr;
 	bool k;
