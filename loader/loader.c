@@ -8,6 +8,7 @@
 typedef struct {
   UINT8* RsdpPtr;
   EFI_MEMORY_DESCRIPTOR* MemMap;
+  UINT32 DespSize;
   UINT32 MemMapSize;
 } BootInfo;
 
@@ -68,14 +69,16 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
 
   bootInfo->RsdpPtr = rsdpPtr;
   bootInfo->MemMap = memMap;
-  bootInfo->MemMapSize = memMapSize;
+  bootInfo->DespSize = despSize;
+  bootInfo->MemMapSize = memMapSize / despSize;
 
   __asm__ volatile (
        "ld.d $sp, %0\n"
+       "ld.d $a0, %0\n"
        "ld.d $t0, %1\n"
        "jr $t0\n"
        ::"m"(bootInfo), "m"(kernelMain)
-       :"$sp", "$t0");
+       :"$t0");
 
   while (1);
   return EFI_SUCCESS;

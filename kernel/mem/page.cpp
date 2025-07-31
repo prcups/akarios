@@ -1,24 +1,83 @@
 #include <mem.h>
 
-PageAllocator::PageAllocator(){
-    setPageInfo(upAlign((u64) (&KernelEnd), PAGEINFO_SIZE_BIT), 0);
+void PageAllocator::Init(BootInfo& info)
+{
+    MemMapDesp *pt;
+    pageAreaStart = upAlign((u64) (&KernelEnd), PAGE_SIZE_BIT);
+    u64 memMapEnd = (u64) info.MemMap + info.MemMapSize * info.DespSize - 1;
+    u64 memSize = 0, maxMemPageNum = 0, maxMemStart;
+    u64 pageSectionStart, pageSectionEnd, mprSize;
 
-    u64 mprEnd = upAlign((u64) pageInfo + ((0xFFFFFFFF - pageAreaStart + 1) >> (PAGE_SIZE_BIT - PAGEINFO_SIZE_BIT)), PAGE_SIZE_BIT) - 1;
+    for (u32 i = 0; i < PAGE_GROUP_SIZE_BIT; ++i)
+        buddyHeadList[i] = nullptr;
 
-    for (Page *i = pageInfo; i < pageInfo + ((0x100000000 - pageAreaStart) >> PAGE_SIZE_BIT); ++i) {
-        i->Valid = 0;
+    for (u32 i = 0; i < info.MemMapSize; ++i)
+    {
+        pt = (MemMapDesp *)((u64)(info.MemMap) + i * info.DespSize);
+        pageSectionStart = pt->PStart;
+        pageSectionEnd = pt->PStart + (pt->NumOfPages << PAGE_SIZE_BIT) - 1;
+        if (pt->PStart + (pt->NumOfPages << PAGE_SIZE_BIT) > memSize)
+            memSize = pt->PStart + (pt->NumOfPages << PAGE_SIZE_BIT);
+        if (pt->NumOfPages > maxMemPageNum
+            && pageSectionStart >= pageAreaStart
+            && ((u64) info.MemMap > pageSectionEnd
+                || memMapEnd < pageSectionStart)
+            && !isIllegal(pt->Type)
+            )
+        {
+            maxMemPageNum = pt->NumOfPages;
+            maxMemStart = pt->PStart;
+        }
     }
 
-    AddArea(0, mprEnd, 1);
-    AddArea(mprEnd + 1, 0xFFFFFFFF, 0);
-    AddArea(0x10000000, 0x7FFFFFFF, 1);
-    AddArea(0x80000000, 0xFFFFFFFF, 0);
+    mprSize = ((memSize - pageAreaStart) >> (PAGE_SIZE_BIT - PAGEINFO_SIZE_BIT));
+    if (maxMemPageNum * PAGE_SIZE >= mprSize)
+        mprStart = (Page *) maxMemStart;
+    else
+    {
+        uPut << "Can't allocate page management area.";
+        while (1);
+    }
+
+    mprEnd = (u64) mprStart + mprSize - 1;
+
+    for (int i = 0; i < info.MemMapSize; ++i)
+    {
+        pt = (MemMapDesp *)((u64)(info.MemMap) + i * info.DespSize);
+        pageSectionStart = pt->PStart;
+        pageSectionEnd = pt->PStart + (pt->NumOfPages << PAGE_SIZE_BIT) - 1;
+        if (pageSectionEnd < pageAreaStart) continue;
+        if (pageSectionStart < pageAreaStart)
+            AddArea(pageAreaStart, pageSectionEnd, isIllegal(pt->Type));
+        else if (pageSectionStart == (u64) mprStart)
+        {
+            AddArea((u64) mprStart, mprEnd, true);
+            if (mprEnd + 1 < pageSectionEnd)
+                AddArea(upAlign(mprEnd + 1, PAGE_SIZE_BIT), pageSectionEnd, isIllegal(pt->Type));
+        }
+        else AddArea(pageSectionStart, pageSectionEnd, isIllegal(pt->Type));
+    }
 }
 
-void PageAllocator::setPageInfo(u64 pageInfoAddress, u64 pageAreaStart)
+bool PageAllocator::isIllegal(EFIMemType type)
 {
-    pageInfo = (Page *) pageInfoAddress;
-    this->pageAreaStart = pageAreaStart;
+    if (type == EfiLoaderCode
+        || type == EfiLoaderData
+        || type == EfiBootServicesCode
+        || type == EfiBootServicesData
+        || type == EfiConventionalMemory
+        || type == EfiUnacceptedMemoryType
+    ) return false;
+    else return true;
+}
+
+void PageAllocator::initPage(Page* t, u32 sizeBit)
+{
+    t->SizeBit = sizeBit;
+    t->InBuddy = 0;
+    t->Next = nullptr;
+    t->Prev = nullptr;
+    t->RefCount = 0;
 }
 
 void PageAllocator::AddArea(u64 start, u64 end, bool isMaskedAsIllegal)
@@ -27,10 +86,10 @@ void PageAllocator::AddArea(u64 start, u64 end, bool isMaskedAsIllegal)
     u8 currentPageSizeBit = 0;
     Page *t;
     while (1) {
-        while ((pt & (1 << (currentPageSizeBit + PAGE_SIZE_BIT))) == 0 && currentPageSizeBit < PAGE_GROUP_SIZE_BIT - 1) ++currentPageSizeBit;
+        while (((pt - pageAreaStart) & (1 << (currentPageSizeBit + PAGE_SIZE_BIT))) == 0 && currentPageSizeBit < PAGE_GROUP_SIZE_BIT - 1) ++currentPageSizeBit;
         if (pt + (1 << (currentPageSizeBit + PAGE_SIZE_BIT)) - 1 > end) break;
         t = AddrToPage(pt);
-        setupPage(t, isMaskedAsIllegal ? PAGE_GROUP_SIZE_BIT : currentPageSizeBit);
+        initPage(t, isMaskedAsIllegal ? PAGE_GROUP_SIZE_BIT : currentPageSizeBit);
         if (!isMaskedAsIllegal) addPageToBuddy(t);
         pt += (1 << (currentPageSizeBit + PAGE_SIZE_BIT));
     }
@@ -39,7 +98,7 @@ void PageAllocator::AddArea(u64 start, u64 end, bool isMaskedAsIllegal)
 
         while (pt + (1 << (currentPageSizeBit + PAGE_SIZE_BIT)) - 1 > end) --currentPageSizeBit;
         t = AddrToPage(pt);
-        setupPage(t, isMaskedAsIllegal ? PAGE_GROUP_SIZE_BIT : currentPageSizeBit);
+        initPage(t, isMaskedAsIllegal ? PAGE_GROUP_SIZE_BIT : currentPageSizeBit);
         if (!isMaskedAsIllegal) addPageToBuddy(t);
     }
 }
@@ -51,7 +110,7 @@ void PageAllocator::addPageToBuddy(Page* t)
         buddyHeadList[t->SizeBit]->Prev = t;
     }
     buddyHeadList[t->SizeBit] = t;
-    t->Valid = 1;
+    t->InBuddy = 1;
 }
 
 void PageAllocator::deletePageFromBuddy(Page* t)
@@ -60,7 +119,7 @@ void PageAllocator::deletePageFromBuddy(Page* t)
     if (t->Prev) t->Prev->Next = t->Next;
     else buddyHeadList[t->SizeBit] = t->Next;
     t->Next = t->Prev = nullptr;
-    t->Valid = 0;
+    t->InBuddy = 0;
 }
 
 Page* PageAllocator::AllocPage(u8 sizeBit) {
@@ -76,7 +135,7 @@ Page* PageAllocator::AllocPage(u8 sizeBit) {
     while (p->SizeBit > sizeBit) {
         --p->SizeBit;
         buddy = getBuddyPage(p);
-        setupPage(buddy, p->SizeBit);
+        initPage(buddy, sizeBit);
         addPageToBuddy(buddy);
     }
     ++p->RefCount;
@@ -85,18 +144,19 @@ Page* PageAllocator::AllocPage(u8 sizeBit) {
 
 void PageAllocator::FreePage(Page* t)
 {
+    if (t < mprStart
+        || (u64) t > mprEnd
+        || t->SizeBit == PAGE_GROUP_SIZE_BIT
+    ) return;
     --t->RefCount;
     if (t->RefCount != 0) return;
     Page *buddy;
-    for (; t->SizeBit < PAGE_GROUP_SIZE_BIT; ++t->SizeBit) {
+    for (; t->SizeBit < PAGE_GROUP_SIZE_BIT - 1; ++t->SizeBit) {
         buddy = getBuddyPage(t);
-        if (buddy->Valid == 1) {
-            deletePageFromBuddy(buddy);
-            setupPage(buddy, t->SizeBit);
-            t = buddy - t > 0 ? t : buddy;
-        } else {
-            break;
-        }
+        if (buddy == nullptr || buddy->InBuddy == 0) break;
+        deletePageFromBuddy(buddy);
+        buddy->SizeBit = t->SizeBit;
+        t = buddy - t > 0 ? t : buddy;
     }
     addPageToBuddy(t);
 }
@@ -107,6 +167,36 @@ void PageAllocator::ListPage() {
         for (Page *t = buddyHeadList[i]; t != nullptr; t = t->Next) {
             ++c;
         }
-        uPut << "2 ^ " << i << " = " << c << '\n';
+        uPut << "2 ^ " << i << " = " << c << "\r\n";
     }
 }
+
+Page * PageAllocator::getBuddyPage(Page* t)
+{
+    Page *page = (Page *)((u64)t ^ (1 << (t->SizeBit + PAGEINFO_SIZE_BIT)));
+    if ((u64) page > mprEnd) return nullptr;
+    return page;
+}
+
+u64 PageAllocator::PageToAddr(Page* t)
+{
+    return (((t - mprStart) << PAGE_SIZE_BIT) + (u64) pageAreaStart);
+}
+
+Page * PageAllocator::AddrToPage(u64 t)
+{
+    return mprStart + ((t - pageAreaStart) >> PAGE_SIZE_BIT);
+}
+
+void * PageAllocator::AllocPageMem(u8 sizeBit)
+{
+    Page * t = AllocPage(sizeBit);
+    return (void*) PageToAddr(t);
+}
+
+void PageAllocator::FreePageMem(void* addr)
+{
+    Page *t = AddrToPage((u64) addr);
+    FreePage(t);
+}
+

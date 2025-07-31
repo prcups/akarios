@@ -23,6 +23,7 @@ qemu: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
 	-drive format=raw,file=akarios.img \
+	-m 1G \
 	-device virtio-gpu-pci \
 	-device nec-usb-xhci,id=xhci,addr=0x1b \
 	-device usb-tablet,id=tablet,bus=xhci.0,port=1 \

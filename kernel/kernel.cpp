@@ -60,10 +60,22 @@ inline void initException() {
     SysException.IntOn();
 }
 
-extern "C" void KernelMain() {
+extern "C" void KernelMain(BootInfo info) {
     invokeInit();
-    uPut << "Hello World!\n";
-    // initMem();
+    pageAllocator.Init(info);
+    pageAllocator.ListPage();
+    int* t;
+    for (int i = 0; i < 6; ++i)
+    {
+        t = (int*) pageAllocator.AllocPageMem(10);
+        *t = i;
+        uPut << *t << "\r\n";
+    }
+    pageAllocator.ListPage();
+    pageAllocator.FreePageMem(t);
+    pageAllocator.ListPage();
+
+    //initMem();
     // initException();
     //
     //

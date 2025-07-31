@@ -11,14 +11,50 @@
 #define PAGE_SIZE_BIT 12
 #define PAGE_SIZE (1 << PAGE_SIZE_BIT)
 #define PAGEINFO_SIZE_BIT 5
+#define PAGEINFO_SIZE (1 << PAGEINFO_SIZE_BIT)
+
+enum EFIMemType {
+    EfiReservedMemoryType,
+    EfiLoaderCode,
+    EfiLoaderData,
+    EfiBootServicesCode,
+    EfiBootServicesData,
+    EfiRuntimeServicesCode,
+    EfiRuntimeServicesData,
+    EfiConventionalMemory,
+    EfiUnusableMemory,
+    EfiACPIReclaimMemory,
+    EfiACPIMemoryNVS,
+    EfiMemoryMappedIO,
+    EfiMemoryMappedIOPortSpace,
+    EfiPalCode,
+    EfiPersistentMemory,
+    EfiUnacceptedMemoryType,
+    EfiMaxMemoryType
+};
+
+struct MemMapDesp {
+    EFIMemType Type;
+    u64 PStart;
+    u64 VStart;
+    u64 NumOfPages;
+    u64 Attr;
+};
+
+struct BootInfo {
+    u8* RsdpPtr;
+    MemMapDesp* MemMap;
+    u32 DespSize;
+    u32 MemMapSize;
+};
 
 struct Page {
 	Page *Prev;
 	Page *Next;
 	u32 RefCount;
     u32 SizeBit;
-    u32 Valid;
-    u32 Resv;
+    u32 InBuddy;
+    u32 resv;
 };
 
 struct ZoneConfig {
@@ -91,36 +127,22 @@ public:
 };
 
 class PageAllocator {
-    Page *pageInfo;
-    u64 pageAreaStart;
+    Page *mprStart;
+    u64 pageAreaStart, mprEnd;
 	Page* buddyHeadList[PAGE_GROUP_SIZE_BIT];
-    void setupPage(Page* t, u8 sizeBit) {
-      t->SizeBit = sizeBit;
-    }
+    bool isIllegal(EFIMemType type);
     void addPageToBuddy(Page* t);
     void deletePageFromBuddy(Page *t);
-    void setPageInfo(u64 pageInfoAddress, u64 pageAreaStart);
-    Page* getBuddyPage(Page *t) {
-      return (Page *)((u64)t ^ (1 << (t->SizeBit + PAGEINFO_SIZE_BIT)));
-    }
+    Page* getBuddyPage(Page *t);
+    void initPage(Page* t, u32 sizeBit);
 public:
-	PageAllocator();
-	u64 PageToAddr(Page* t) {
-      return (((t - pageInfo) << PAGE_SIZE_BIT) + (u64) pageAreaStart);
-    }
-	Page* AddrToPage(u64 t) {
-      return pageInfo + ((t - pageAreaStart) >> PAGE_SIZE_BIT);
-    }
+    void Init(BootInfo &info);
+	u64 PageToAddr(Page* t);
+	Page* AddrToPage(u64 t);
 	Page* AllocPage(u8 sizeBit);
-    void* AllocPageMem(u8 sizeBit) {
-        Page * t = AllocPage(sizeBit);
-        return (void*) PageToAddr(t);
-    }
+    void* AllocPageMem(u8 sizeBit);
 	void FreePage(Page* t);
-    void FreePageMem(void* addr) {
-        Page *t = AddrToPage((u64) addr);
-        FreePage(t);
-    }
+    void FreePageMem(void* addr);
     void AddArea(u64 start, u64 end, bool isMaskedAsIllegal);
     void ListPage();
 };
