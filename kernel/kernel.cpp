@@ -13,11 +13,7 @@ Exception SysException;
 Timer SysTimer;
 
 PageAllocator pageAllocator;
-
-SlabNodeArea slabNodeZone;
-SlabNodeAllocator slabNodeAllocator;
-SlabArea defaultSlabZone;
-SlabAllocator defaultSlabAllocator;
+SmallMemAllocator smallMemAllocator;
 
 ProcessController processController;
 
@@ -63,18 +59,13 @@ inline void initException() {
 extern "C" void KernelMain(BootInfo info) {
     invokeInit();
     pageAllocator.Init(info);
-    pageAllocator.ListPage();
-    int* t;
-    for (int i = 0; i < 6; ++i)
-    {
-        t = (int*) pageAllocator.AllocPageMem(10);
-        *t = i;
-        uPut << *t << "\r\n";
-    }
-    pageAllocator.ListPage();
-    pageAllocator.FreePageMem(t);
-    pageAllocator.ListPage();
 
+    int *a = new int[13];
+    a[0] = 114514;
+    smallMemAllocator.List();
+    uPut << a[0] << "\r\n";
+    delete [] a;
+    smallMemAllocator.List();
     //initMem();
     // initException();
     //

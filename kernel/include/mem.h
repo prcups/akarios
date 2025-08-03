@@ -147,69 +147,26 @@ public:
     void ListPage();
 };
 
-struct SlabNode {
-    void* Start;
-    u16 Size;
-    SlabNode *Next;
+struct SmallMemNode {
+    void* Mem;
+    SmallMemNode* Next;
+    SmallMemNode* Prev;
+    u64 Size;
 };
 
-class Slab {
-protected:
-    void* pageMem;
+class SmallMemAllocator {
+    SmallMemNode* free = nullptr;
+    SmallMemNode* used = nullptr;
 public:
-    virtual void* Malloc(u16 size) = 0;
-    virtual bool Free(void* addr) = 0;
-};
-
-class SlabNodeArea: public Slab {
-    u8 bitMap[28];
-    bool used;
-public:
-    SlabNodeArea();
-    SlabNodeArea* Next;
-    void* Malloc(u16 size) override;
-    bool Free(void* addr) override;
-};
-
-class SlabArea: public Slab{
-    SlabNode *availableMem;
-    SlabNode *usedMem;
-    friend class SlabAllocator;
-    bool used;
-public:
-    SlabArea();
-    SlabArea* Next;
-    void* Malloc(u16 size) override;
-    bool Free(void* addr) override;
-};
-
-class SlabNodeAllocator {
-    SlabNodeArea *slabNodeZonePtr;
-    u64 zoneNum;
-    u64 nodeNum;
-public:
-    SlabNodeAllocator();
-    SlabNode* AllocNode();
-    void FreeNode(SlabNode *node);
-};
-
-class SlabAllocator {
-    SlabArea *defaultSlabZonePtr;
-public:
-    SlabAllocator();
-    void* Malloc(u16 size);
-    bool Free(void* addr);
-    void ListZone();
+    void* Alloc(u32 size);
+    bool Free(void* mem);
+    void List();
 };
 
 extern void* KernelEnd;
 extern const u64 vaddrEnd;
 
 extern PageAllocator pageAllocator;
-
-extern SlabNodeArea slabNodeZone;
-extern SlabNodeAllocator slabNodeAllocator;
-extern SlabArea defaultSlabZone;
-extern SlabAllocator defaultSlabAllocator;
+extern SmallMemAllocator smallMemAllocator;
 
 #endif
