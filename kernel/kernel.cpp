@@ -1,12 +1,11 @@
 #include <uart.h>
 #include <mem.h>
 #include <util.h>
+#include <acpi.h>
 #include <exception.h>
 #include <larchintrin.h>
 #include <timer.h>
 #include <process.h>
-
-const u64 vaddrEnd = 1ull << (getPartical(getCPUCFG(1), 19, 12) - 1);
 
 UART uPut((u8 *)(0x800000001fe001e0llu));
 Exception SysException;
@@ -14,8 +13,8 @@ Timer SysTimer;
 
 PageAllocator pageAllocator;
 SmallMemAllocator smallMemAllocator;
-
 ProcessController processController;
+ACPIManager acpiManager;
 
 extern "C" {
     void __cxa_pure_virtual() {}
@@ -59,23 +58,13 @@ inline void initException() {
 extern "C" void KernelMain(BootInfo info) {
     invokeInit();
     pageAllocator.Init(info);
+    initMem();
+    initException();
+    acpiManager.Init(info.XsdpPtr);
+    acpiManager.FindTable("MCFG");
 
-    int *a = new int[13];
-    a[0] = 114514;
-    smallMemAllocator.List();
-    uPut << a[0] << "\r\n";
-    delete [] a;
-    smallMemAllocator.List();
-    //initMem();
-    // initException();
-    //
-    //
-    // ELFProgram program("open");
-    // program.CreateProcess();
-    //
-    // SysTimer.TimerOn();
-    // extern void StartProcess();
-    // StartProcess();
+    //SysTimer.TimerOn();
+
 
     while (1);
 }

@@ -25,6 +25,7 @@ void Exception::HandleDefaultException() {
                     switch (intrOp) {
                         case 11:
                             ++Jiffies::sysJiffies;
+                            uPut << "TIMEOUT\r\n";
                             processController.HandleSchedule();
                             SysTimer.TimerIntClear();
                     }
@@ -86,8 +87,8 @@ void Exception::HandleDefaultException() {
                     processController.HandleSchedule();
                     break;
                 default:
-                    uPut << "Unsupported Syscall " << ContextReg[9] << '\n';
-                    uPut << "ERA: " << (void*) __csrrd_d(0x6) << '\n';
+                    uPut << "Unsupported Syscall " << ContextReg[9] << "\r\n";
+                    uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
                     while (1);
                     break;
             }
@@ -97,25 +98,25 @@ void Exception::HandleDefaultException() {
         case 0x1:
         case 0x2: {
             uPut << "Page Invalid\n";
-            uPut << "ERA: " << (void*) __csrrd_d(0x6) << '\n';
-            uPut << "BADV: " << (void*) __csrrd_d(0x7) << '\n';
-            uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << '\n';
+            uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
+            uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
+            uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << "\r\n";
             __asm__(
                 "tlbsrch\n"
                 "tlbrd"
             );
-            uPut << "TLBIDX: " << (void*) __csrrd_d(0x10) << '\n';
-            uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << '\n';
-            uPut << "TLBELO0: " << (void*) __csrrd_d(0x12) << '\n';
-            uPut << "TLBELO1: " << (void*) __csrrd_d(0x13) << '\n';
+            uPut << "TLBIDX: " << (void*) __csrrd_d(0x10) << "\r\n";
+            uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << "\r\n";
+            uPut << "TLBELO0: " << (void*) __csrrd_d(0x12) << "\r\n";
+            uPut << "TLBELO1: " << (void*) __csrrd_d(0x13) << "\r\n";
             while (1);
         }
         default: {
             uPut << "Exception\n";
-            uPut << "ESTATE: " << (void*) estate << '\n';
-            uPut << "ERA: " << (void*) __csrrd_d(0x6) << '\n';
-            uPut << "BADV: " << (void*) __csrrd_d(0x7) << '\n';
-            uPut << "BADI: " << (void*) __csrrd_d(0x8) << '\n';
+            uPut << "ESTATE: " << (void*) estate << "\r\n";
+            uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
+            uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
+            uPut << "BADI: " << (void*) __csrrd_d(0x8) << "\r\n";
             while (1);
         }
     }
@@ -123,9 +124,9 @@ void Exception::HandleDefaultException() {
 
 void Exception::HandleTLBException() {
     if (!processController.CurrentProcess) {
-        uPut << "Kernel Panic" << '\n';
-        uPut << "TLBRBADV: " << (void*) __csrrd_d(0x89) << '\n';
-        uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << '\n';
+        uPut << "Kernel Panic" << "\r\n";
+        uPut << "TLBRBADV: " << (void*) __csrrd_d(0x89) << "\r\n";
+        uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << "\r\n";
         while (1);
     }
 
@@ -137,8 +138,8 @@ void Exception::HandleTLBException() {
     });
     if (zone == nullptr) {
         uPut << "illegal address\n";
-        uPut << "TLBRBADV: " << (void*) addr << '\n';
-        uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << '\n';
+        uPut << "TLBRBADV: " << (void*) addr << "\r\n";
+        uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << "\r\n";
         while (1);
     }
     zone->val->OnPageFault(addr);
@@ -146,9 +147,9 @@ void Exception::HandleTLBException() {
 
 void Exception::HandleMachineError(){
     uPut << "Machine Error:\n";
-    uPut << "MERRERA: " << (void*) __csrrd_d(0x94) << '\n';
-    uPut << "MERRCTL: " << (void*) __csrrd_d(0x90) << '\n';
-    uPut << "MERRINFO1: " << (void*) __csrrd_d(0x91) << '\n';
-    uPut << "MERRINFO2: " << (void*) __csrrd_d(0x92) << '\n';
+    uPut << "MERRERA: " << (void*) __csrrd_d(0x94) << "\r\n";
+    uPut << "MERRCTL: " << (void*) __csrrd_d(0x90) << "\r\n";
+    uPut << "MERRINFO1: " << (void*) __csrrd_d(0x91) << "\r\n";
+    uPut << "MERRINFO2: " << (void*) __csrrd_d(0x92) << "\r\n";
     while (1);
 }

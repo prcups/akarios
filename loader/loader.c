@@ -38,7 +38,7 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
 
   for (index = 0; index < SystemTable->NumberOfTableEntries; index++)
   {
-    if (&SystemTable->ConfigurationTable[index].VendorGuid == &acpiTableGuid)
+    if (CompareGuid(&SystemTable->ConfigurationTable[index].VendorGuid, &acpiTableGuid) == 0)
     {
       configurationTable = &SystemTable->ConfigurationTable[index];
       rsdpPtr = (UINT8 *)configurationTable->VendorTable;

@@ -6,6 +6,7 @@
 #include <tree.h>
 #include <larchintrin.h>
 #include <new>
+#include <acpi.h>
 
 #define PAGE_GROUP_SIZE_BIT 12
 #define PAGE_SIZE_BIT 12
@@ -42,7 +43,7 @@ struct MemMapDesp {
 };
 
 struct BootInfo {
-    u8* RsdpPtr;
+    XSDP* XsdpPtr;
     MemMapDesp* MemMap;
     u32 DespSize;
     u32 MemMapSize;

@@ -84,13 +84,12 @@ SysSp:
     st.d $r29, $sp, 216
     st.d $r30, $sp, 224
     st.d $r31, $sp, 232
-    csrrd $sp, 0x1
-    andi $sp, $sp, 0x11
-    bne $sp, $r0, 12
     csrrd $sp, 0x30
-    b 16
-    la.local $sp, SysSp
-    ld.d $sp, $sp, 0
+    csrrd $t0, 0x1
+    andi $t0, $t0, 0x3
+    beq $t0, $r0, 12
+    la.local $t0, SysSp
+    ld.d $sp, $t0, 0
 .endm
 
 HandleMachineErrorEntry:

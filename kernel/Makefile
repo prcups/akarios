@@ -2,14 +2,12 @@
 
 CXXFLAGS = -g -std=c++20 -Iinclude -fno-rtti -fno-exceptions
 LDFLAGS = -Tkernel.ld -g
-SOURCES = $(wildcard uart/*.cpp \
-		     mem/*.cpp \
-		     kernel.cpp \
-		     util/*.cpp \
-		     exception/*.cpp \
-		     timer/*.cpp \
-		     process/*.cpp \
-		     sdcard/*.cpp \
+SOURCES = $(wildcard kernel.cpp \
+			 mem/*.cpp \
+			 util/*.cpp \
+			 exception/*.cpp \
+			 process/*.cpp \
+			 driver/*.cpp \
 	   )
 
 OBJS = loader.o exception/context.o $(SOURCES:%.cpp=%.o)
