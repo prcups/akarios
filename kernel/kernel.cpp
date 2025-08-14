@@ -2,6 +2,7 @@
 #include <mem.h>
 #include <util.h>
 #include <acpi.h>
+#include <pcie.h>
 #include <exception.h>
 #include <larchintrin.h>
 #include <timer.h>
@@ -15,6 +16,7 @@ PageAllocator pageAllocator;
 SmallMemAllocator smallMemAllocator;
 ProcessController processController;
 ACPIManager acpiManager;
+PCIEDeviceManager pcieDeviceManager;
 
 extern "C" {
     void __cxa_pure_virtual() {}
@@ -61,7 +63,7 @@ extern "C" void KernelMain(BootInfo info) {
     initMem();
     initException();
     acpiManager.Init(info.XsdpPtr);
-    acpiManager.FindTable("MCFG");
+    pcieDeviceManager.Init();
 
     //SysTimer.TimerOn();
 

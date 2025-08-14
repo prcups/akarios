@@ -97,7 +97,7 @@ void Exception::HandleDefaultException() {
         }
         case 0x1:
         case 0x2: {
-            uPut << "Page Invalid\n";
+            uPut << "**Page Invalid**\r\n";
             uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
             uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
             uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << "\r\n";
@@ -112,7 +112,7 @@ void Exception::HandleDefaultException() {
             while (1);
         }
         default: {
-            uPut << "Exception\n";
+            uPut << "**Exception**\r\n";
             uPut << "ESTATE: " << (void*) estate << "\r\n";
             uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
             uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
@@ -124,7 +124,7 @@ void Exception::HandleDefaultException() {
 
 void Exception::HandleTLBException() {
     if (!processController.CurrentProcess) {
-        uPut << "Kernel Panic" << "\r\n";
+        uPut << "**Kernel Memory Error**\r\n";
         uPut << "TLBRBADV: " << (void*) __csrrd_d(0x89) << "\r\n";
         uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << "\r\n";
         while (1);
@@ -137,7 +137,7 @@ void Exception::HandleTLBException() {
         else return 2;
     });
     if (zone == nullptr) {
-        uPut << "illegal address\n";
+        uPut << "**illegal address**\r\n";
         uPut << "TLBRBADV: " << (void*) addr << "\r\n";
         uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << "\r\n";
         while (1);
@@ -146,7 +146,7 @@ void Exception::HandleTLBException() {
 }
 
 void Exception::HandleMachineError(){
-    uPut << "Machine Error:\n";
+    uPut << "**Machine Error**\r\n";
     uPut << "MERRERA: " << (void*) __csrrd_d(0x94) << "\r\n";
     uPut << "MERRCTL: " << (void*) __csrrd_d(0x90) << "\r\n";
     uPut << "MERRINFO1: " << (void*) __csrrd_d(0x91) << "\r\n";

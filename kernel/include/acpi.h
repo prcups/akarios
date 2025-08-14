@@ -38,4 +38,6 @@ public:
     ACPISDTHeader* FindTable(const char* name);
 };
 
+extern ACPIManager acpiManager;
+
 #endif

@@ -1,6 +1,6 @@
 .PHONY: clean
 
-CXXFLAGS = -g -std=c++20 -Iinclude -fno-rtti -fno-exceptions
+CXXFLAGS = -g -std=c++20 -Iinclude -fno-rtti -fno-exceptions -fno-stack-protector
 LDFLAGS = -Tkernel.ld -g
 SOURCES = $(wildcard kernel.cpp \
 			 mem/*.cpp \
@@ -24,5 +24,5 @@ kernel: $(OBJS)
 
 clean:
 	find . -name \*.o -exec rm {} \;
-	if [ -f kernel ]; then rm kernel; fi
+	if [ -f kernel.bin ]; then rm kernel.bin; fi
 	if [ -f kernel.elf ]; then rm kernel.elf; fi
