@@ -54,7 +54,12 @@ void PCIESeg::load(PCIDeviceHeader* dev)
 
 void PCIESeg::loadDevice(PCIDevice* dev)
 {
-
+    uPut << dev->ClassCode << " " << dev->SubClass << '\n';
+//     switch (dev->ClassCode)
+//     {
+//         case 0x1:
+//
+//     }
 }
 
 void PCIESeg::loadBridge(PCIBridge *dev)

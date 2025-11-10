@@ -8,7 +8,7 @@ SECTIONS
   .text : {
     *(.text)
   }
-
+ 
   .data : {
     *(.data)
   }
@@ -24,7 +24,8 @@ SECTIONS
   .stack : {
     *(.stack)
   }
-
+ 
+  . = ALIGN(8);
   __init_array_start = .;
   .init_array : {
     *(.init_array)

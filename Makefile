@@ -29,8 +29,9 @@ img: loader kernel
 qemu: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
-	-drive id=disk,format=raw,file=akarios.img,if=none \
-	-device nvme,serial=deadbeef,drive=disk \
+	-drive id=disk,file=akarios.img,if=none \
+	-device ahci,id=ahci \
+	-device ide-hd,drive=disk,bus=ahci.0 \
 	-device virtio-gpu-pci \
 	-device nec-usb-xhci,id=xhci,addr=0x1b \
 	-device usb-tablet,id=tablet,bus=xhci.0,port=1 \
