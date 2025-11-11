@@ -1,4 +1,5 @@
 #include <pcie.h>
+#include <ahci.h>
 
 void PCIEDeviceManager::Init()
 {
@@ -16,9 +17,9 @@ void PCIESeg::Init(u64 baseAddress)
     visitBus(0);
 }
 
-PCIDeviceHeader * PCIESeg::getDevice(u8 busNum, u8 devNum, u8 funcNum)
+PCIDeviceInfoHeader * PCIESeg::getDevice(u8 busNum, u8 devNum, u8 funcNum)
 {
-    return (PCIDeviceHeader*) (baseAddress +
+    return (PCIDeviceInfoHeader*) (baseAddress +
         ((busNum << 20) | (devNum << 15) | (funcNum << 12)));
 }
 
@@ -35,7 +36,7 @@ void PCIESeg::visitDevice(u8 busNum, u8 devNum)
     load(dev);
     if (dev->MF)
     {
-        PCIDeviceHeader *func;
+        PCIDeviceInfoHeader *func;
         for (u8 funcNum = 1; funcNum < 8; ++funcNum)
         {
             func = getDevice(busNum, devNum, funcNum);
@@ -45,14 +46,14 @@ void PCIESeg::visitDevice(u8 busNum, u8 devNum)
     }
 }
 
-void PCIESeg::load(PCIDeviceHeader* dev)
+void PCIESeg::load(PCIDeviceInfoHeader* dev)
 {
-    if (dev->HeaderType == 0) loadDevice((PCIDevice*) dev);
+    if (dev->HeaderType == 0) loadDevice((PCIDeviceInfo*) dev);
     else if (dev->HeaderType == 1) loadBridge((PCIBridge*) dev);
 }
 
 
-void PCIESeg::loadDevice(PCIDevice* dev)
+void PCIESeg::loadDevice(PCIDeviceInfo* dev)
 {
     switch (dev->ClassCode)
     {
@@ -61,7 +62,7 @@ void PCIESeg::loadDevice(PCIDevice* dev)
             switch (dev->SubClass)
             {
                 case 0x6:
-
+                    ListItem<PCIEDevice*>::Add(&deviceList, new ListItem<PCIEDevice*>(new AHCIController(dev->Bar[5])));
             }
         }
     }

@@ -3,6 +3,7 @@
 
 #include <util.h>
 #include <acpi.h>
+#include <list.h>
 
 struct ECMSpace
 {
@@ -13,7 +14,7 @@ struct ECMSpace
     u32 resv;
 };
 
-struct PCIDeviceHeader
+struct PCIDeviceInfoHeader
 {
     u16 VendorID;
     u16 DeviceID;
@@ -30,7 +31,7 @@ struct PCIDeviceHeader
     u8 BIST;
 };
 
-struct PCIDevice : PCIDeviceHeader
+struct PCIDeviceInfo : PCIDeviceInfoHeader
 {
     u32 Bar[6];
     u32 CardbusCISPointer;
@@ -46,7 +47,7 @@ struct PCIDevice : PCIDeviceHeader
     u8 MaxLatency;
 };
 
-struct PCIBridge : PCIDeviceHeader
+struct PCIBridge : PCIDeviceInfoHeader
 {
     u32 Bar[2];
     u8 PrimaryBusNumber;
@@ -72,16 +73,19 @@ struct PCIBridge : PCIDeviceHeader
     u16 BridgeControl;
 };
 
+class PCIEDevice {};
+
 class PCIESeg
 {
     u64 baseAddress;
     u32 busPos = 0;
-    PCIDeviceHeader* getDevice(u8 busNum, u8 devNum, u8 funcNum);
+    PCIDeviceInfoHeader* getDevice(u8 busNum, u8 devNum, u8 funcNum);
     void visitBus(u8 busNum);
     void visitDevice(u8 busNum, u8 devNum);
-    void load(PCIDeviceHeader *dev);
-    void loadDevice(PCIDevice *dev);
+    void load(PCIDeviceInfoHeader *dev);
+    void loadDevice(PCIDeviceInfo *dev);
     void loadBridge(PCIBridge *dev);
+    ListItem<PCIEDevice*> *deviceList;
 public:
     void Init(u64 baseAddress);
 };

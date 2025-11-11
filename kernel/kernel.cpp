@@ -7,6 +7,8 @@
 #include <larchintrin.h>
 #include <timer.h>
 #include <process.h>
+#include <disk.h>
+#include <list.h>
 
 UART uPut((u8 *)(0x800000001fe001e0llu));
 Exception SysException;
@@ -17,6 +19,8 @@ SmallMemAllocator smallMemAllocator;
 ProcessController processController;
 ACPIManager acpiManager;
 PCIEDeviceManager pcieDeviceManager;
+
+ListItem<Disk*> *diskList = nullptr;
 
 extern "C" {
     void __cxa_pure_virtual() {}
@@ -64,6 +68,15 @@ extern "C" void KernelMain(BootInfo info) {
     initException();
     acpiManager.Init(info.XsdpPtr);
     pcieDeviceManager.Init();
+    char buf[1024];
+    buf[0] = 'R';
+    buf[1] = 'F';
+    buf[2] = 'D';
+    buf[3] = '\0';
+    if (diskList) {
+        diskList->Val->Read(1, buf);
+        uPut << (const char*) buf;
+    } else uPut << "NO DISK\r\n";
 
     //SysTimer.TimerOn();
 

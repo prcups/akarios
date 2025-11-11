@@ -6,7 +6,7 @@ _start:
 
 	li.d	$t0, 0x8000000000000001
 	csrwr	$t0, 0x181
-	li.d	$t0, 0x11
+	li.d	$t0, 0x1
 	csrwr	$t0, 0x180
 	csrwr	$zero, 0x182
 	csrwr	$zero, 0x183
