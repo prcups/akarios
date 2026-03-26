@@ -10,10 +10,11 @@ static u16 getId() {
 
 Process::Process(u8 priority, u8 nice, void* startAddress):Priority(priority), Nice(nice){
     Id = getId();
-    space = new MemSpace(0x0, 0xFFFFFFFFFFFF);
+    space = nullptr; // 共享内核地址空间
+    for (int i = 0; i < 30; ++i) reg[i] = 0;
     pc = (u64) startAddress;
-    sp = 0xFF000FFC;
-    space->AddZone(new TNode<Zone>(new Zone(0xFF000000, 0xFFFFFFFF, ZoneConfig{1, 3, 0, 1, 0, 0})));
+    // 为进程分配一个栈页
+    sp = (u64) pageAllocator.AllocPageMem(0) + PAGE_SIZE - 8;
     pwd[0] = '/';
 }
 
@@ -28,7 +29,7 @@ void Process::Resume() {
     __csrwr_d(sp, 0x30);
     __csrwr_d(pc, 0x6);
     __csrwr_d(Id, 0x18);
-    GetSpace()->MMUService.SetPGDL();
+    if (space) GetSpace()->MMUService.SetPGDL();
 }
 
 void Process::Pause() {
@@ -55,9 +56,8 @@ void ProcessController::StopCurrentProcess() {
 }
 
 void ProcessController::HandleSchedule() {
-    if (CurrentProcess == nullptr && (!(headBitMap & (0x11111111u << (CurrentProcess->Priority))))) return;
+    if (headBitMap == 0) return;
     StopCurrentProcess();
-    if (headBitMap)
     for (int i = 7; i >= 0; --i) {
         if (headBitMap & (1 << i)) {
             Process *processToExec = bfsHead[i], *processToExecFrom = nullptr;
@@ -83,12 +83,6 @@ void ProcessController::HandleSchedule() {
 }
 
 void ProcessController::InsertProcess(Process* process) {
-    if (CurrentProcess == nullptr || process->Priority > CurrentProcess->Priority) {
-        StopCurrentProcess();
-        CurrentProcess = process;
-        CurrentProcess->Resume();
-        return;
-    }
     process->Deadline = Jiffies(prioRatios[process->Nice]) + Jiffies::GetJiffies();
     process->Next = bfsHead[process->Priority];
     bfsHead[process->Priority] = process;

@@ -11,6 +11,21 @@
 #include <list.h>
 
 UART uPut((u8 *)(0x800000001fe001e0llu));
+
+// 测试进程函数
+extern "C" void ProcessA() {
+    while (1) {
+        uPut << "A";
+        for (volatile int i = 0; i < 100000; ++i); // 简单延迟
+    }
+}
+
+extern "C" void ProcessB() {
+    while (1) {
+        uPut << "B";
+        for (volatile int i = 0; i < 100000; ++i); // 简单延迟
+    }
+}
 Exception SysException;
 Timer SysTimer;
 
@@ -78,8 +93,14 @@ extern "C" void KernelMain(BootInfo info) {
         uPut << (const char*) buf;
     } else uPut << "NO DISK\r\n";
 
-    //SysTimer.TimerOn();
+    // 创建两个测试进程
+    Process* procA = new Process(4, 4, (void*)ProcessA);
+    Process* procB = new Process(4, 4, (void*)ProcessB);
+    
+    processController.InsertProcess(procA);
+    processController.InsertProcess(procB);
 
+    SysTimer.TimerOn();
 
     while (1);
 }
