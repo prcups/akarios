@@ -68,18 +68,8 @@ extern "C" void KernelMain(BootInfo info) {
     initException();
     acpiManager.Init(info.XsdpPtr);
     pcieDeviceManager.Init();
-    char buf[1024];
-    buf[0] = 'R';
-    buf[1] = 'F';
-    buf[2] = 'D';
-    buf[3] = '\0';
-    if (diskList) {
-        diskList->Val->Read(1, buf);
-        uPut << (const char*) buf;
-    } else uPut << "NO DISK\r\n";
 
-    //SysTimer.TimerOn();
-
+    SysTimer.TimerOn();
 
     while (1);
 }

@@ -55,7 +55,7 @@ void ProcessController::StopCurrentProcess() {
 }
 
 void ProcessController::HandleSchedule() {
-    if (CurrentProcess == nullptr && (!(headBitMap & (0x11111111u << (CurrentProcess->Priority))))) return;
+    if (CurrentProcess == nullptr && (!(headBitMap & 0x11111111u ))) return;
     StopCurrentProcess();
     if (headBitMap)
     for (int i = 7; i >= 0; --i) {
