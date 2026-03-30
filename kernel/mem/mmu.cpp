@@ -98,3 +98,22 @@ void MMU::SetPGDL()
     __csrwr_d((u64) pageTable, 0x19);
 }
 
+bool MMU::TryLoadTLB(u64 vaddr)
+{
+    PTE* p1 = (PTE*) pageTable + getPartical(vaddr, 47, 39);
+    if (p1->p == 0) return false;
+
+    PTE* p2 = (PTE*) (p1->pa << 12) + getPartical(vaddr, 38, 30);
+    if (p2->p == 0) return false;
+
+    PTE* p3 = (PTE*) (p2->pa << 12) + getPartical(vaddr, 29, 21);
+    if (p3->p == 0) return false;
+
+    PTE* p4 = (PTE*) (p3->pa << 12) + (getPartical(vaddr, 20, 12));
+    if (p4->v == 0) return false;
+
+    __ldpte_d((long) p4, 0);
+    __ldpte_d((long) (p4 + 1), 1);
+    return true;
+}
+

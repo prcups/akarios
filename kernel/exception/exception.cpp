@@ -135,6 +135,12 @@ void Exception::HandleTLBException() {
     }
 
     u64 addr = __csrrd_d(0x89);
+    auto& mmu = processController.CurrentProcess->GetSpace()->MMUService;
+
+    if (mmu.TryLoadTLB(addr)) {
+        return;
+    }
+
     auto zone = processController.CurrentProcess->GetSpace()->ZoneTree->find([addr](Zone* t)->u8{
         if (t->VStart <= addr && addr <= t->VEnd) return 1;
         else if (addr < t->VStart) return 0;

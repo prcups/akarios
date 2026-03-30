@@ -94,6 +94,7 @@ public:
     void AddItem(u64 vaddr, u64 paddr, ZoneConfig &config);
     void DeleteItem(u64 vaddr);
     u64 V2P(u64 vaddr);
+    bool TryLoadTLB(u64 vaddr);
 };
 
 class MemSpace;
