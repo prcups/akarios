@@ -44,7 +44,7 @@ void ELFProgram::ShowInfo() {
 
 void ELFProgram::CreateProcess() {
     if (header->Type != 2) return;
-    Process *p = new Process(7, 0, (void*) header->ProgramEntryAddr);
+    Process *p = new Process(7, 0, header->ProgramEntryAddr);
     for (u8 i = 0; i < header->NumofEntriesInPHTB; ++i) {
         if ((phtb + i)->Type == 1) {
             p->GetSpace()->AddZone(new TNode<Zone>(new DirectZone((phtb + i)->MemAddr, (phtb + i)->MemAddr + (phtb + i)->SizeOfSegmentInMem - 1, (u64)((u8*) header + (phtb + i)->DataAddr) - (phtb + i)->MemAddr, ZoneConfig{1, 3, 0, 0, 0, 0})));

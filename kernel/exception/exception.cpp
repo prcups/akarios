@@ -25,7 +25,6 @@ void Exception::HandleDefaultException() {
                     switch (intrOp) {
                         case 11:
                             ++Jiffies::sysJiffies;
-                            uPut << "TIMEOUT\r\n";
                             processController.HandleSchedule();
                             SysTimer.TimerIntClear();
                     }
@@ -96,8 +95,14 @@ void Exception::HandleDefaultException() {
             break;
         }
         case 0x1:
-        case 0x2: {
+        case 0x2:
+        case 0x3:
+        case 0x4:
+        case 0x5:
+        case 0x6:
+        case 0x7: {
             uPut << "**Page Invalid**\r\n";
+            uPut << "ESTATE: " << (void*) estate << "\r\n";
             uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
             uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
             uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << "\r\n";
@@ -106,7 +111,6 @@ void Exception::HandleDefaultException() {
                 "tlbrd"
             );
             uPut << "TLBIDX: " << (void*) __csrrd_d(0x10) << "\r\n";
-            uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << "\r\n";
             uPut << "TLBELO0: " << (void*) __csrrd_d(0x12) << "\r\n";
             uPut << "TLBELO1: " << (void*) __csrrd_d(0x13) << "\r\n";
             while (1);

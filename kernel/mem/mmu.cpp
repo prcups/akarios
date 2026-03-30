@@ -2,10 +2,18 @@
 
 MMU::MMU() {
     pageTable = pageAllocator.AllocPageMem(0);
+    initPTE((PTE*) pageTable);
 }
 
 MMU::~MMU() {
     pageAllocator.FreePageMem(pageTable);
+}
+
+void MMU::initPTE(PTE* p)
+{
+    for (PTE *i = p; i != p + (1 << 9); ++i) {
+        i->p = 0;
+    }
 }
 
 void MMU::setConfig(PTE* p, ZoneConfig& config) {
@@ -25,18 +33,21 @@ void MMU::AddItem(u64 vaddr, u64 paddr, ZoneConfig &config)
     if (p1->p == 0) {
         setConfig(p1, config);
         p1->pa = (u64) pageAllocator.AllocPageMem(0) >> 12;
+        initPTE((PTE*) (p1->pa << 12));
     }
 
     PTE* p2 = (PTE*) (p1->pa << 12) + getPartical(vaddr, 38, 30);
     if (p2->p == 0) {
         setConfig(p2, config);
         p2->pa = (u64) pageAllocator.AllocPageMem(0) >> 12;
+        initPTE((PTE*) (p2->pa << 12));
     }
 
     PTE* p3 = (PTE*) (p2->pa << 12) + getPartical(vaddr, 29, 21);
     if (p3->p == 0) {
         setConfig(p3, config);
         p3->pa = (u64) pageAllocator.AllocPageMem(0) >> 12;
+        initPTE((PTE*) (p3->pa << 12));
     }
 
     PTE* p4 = (PTE*) (p3->pa << 12) + (getPartical(vaddr, 20, 12));

@@ -1,18 +1,24 @@
 #include <process.h>
 #include <string.h>
-extern u64 ContextReg[30];
+
+extern u64 ContextReg[31];
+extern u64 ContextPC;
+extern u64 ContextID;
 
 static u16 t = 0;
 
 static u16 getId() {
-    return t++;
+    return ++t;
 }
 
-Process::Process(u8 priority, u8 nice, void* startAddress):Priority(priority), Nice(nice){
+Process::Process(u8 priority, u8 nice, u64 startVAddress):Priority(priority), Nice(nice){
     Id = getId();
     space = new MemSpace(0x0, 0xFFFFFFFFFFFF);
-    pc = (u64) startAddress;
+    pc = startVAddress;
     sp = 0xFF000FFC;
+    for (u8 i = 0; i < 30; ++i) {
+        reg[i] = 0;
+    }
     space->AddZone(new TNode<Zone>(new Zone(0xFF000000, 0xFFFFFFFF, ZoneConfig{1, 3, 0, 1, 0, 0})));
     pwd[0] = '/';
 }
@@ -25,9 +31,9 @@ void Process::Resume() {
     for (u64 i = 0; i < 30; ++i) {
         ContextReg[i] = reg[i];
     }
-    __csrwr_d(sp, 0x30);
-    __csrwr_d(pc, 0x6);
-    __csrwr_d(Id, 0x18);
+    ContextReg[30] = sp;
+    ContextPC = pc;
+    ContextID = Id;
     GetSpace()->MMUService.SetPGDL();
 }
 
@@ -35,8 +41,8 @@ void Process::Pause() {
     for (u64 i = 0; i < 30; ++i) {
         reg[i] = ContextReg[i];
     }
-    sp = __csrrd_d(0x30);
-    pc = __csrrd_d(0x6);
+    sp = ContextReg[30];
+    pc = ContextPC;
 }
 
 void Process::SetArg(void* argc, u64 argv) {
@@ -55,13 +61,15 @@ void ProcessController::StopCurrentProcess() {
 }
 
 void ProcessController::HandleSchedule() {
-    if (CurrentProcess == nullptr && (!(headBitMap & 0x11111111u ))) return;
+    uPut << "\nScheduling\n";
+    if (CurrentProcess == nullptr && (!(headBitMap & 0xFFu ))) return;
     StopCurrentProcess();
     if (headBitMap)
     for (int i = 7; i >= 0; --i) {
         if (headBitMap & (1 << i)) {
             Process *processToExec = bfsHead[i], *processToExecFrom = nullptr;
             for (Process *pt = bfsHead[i], *from = nullptr; pt != nullptr; from = pt, pt = pt->Next) {
+                uPut << pt->Deadline << '\n';
                 if (pt->Deadline < processToExec->Deadline) {
                     processToExecFrom = from;
                     processToExec = pt;

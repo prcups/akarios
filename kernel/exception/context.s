@@ -1,4 +1,6 @@
 .globl ContextReg
+.globl ContextID
+.globl ContextPC
 .globl SysSp
 .globl HandleMachineErrorEntry
 .globl HandleDefaultExceptionEntry
@@ -11,12 +13,24 @@
 
 .data
 ContextReg:
-.fill 30, 8, 0
+.fill 32, 8, 0
+ContextPC:
+.quad 0
+ContextID:
+.quad 0
 SysSp:
-.quad 0xA00000
+.quad 0
 .text
 
 .macro loadContext
+    la.local $t0, ContextPC
+    ld.d $t1, $t0, 0
+    csrwr $t1, 0x6
+    la.local $t0, ContextID
+    ld.d $t1, $t0, 0
+    csrwr $t1, 0x18
+    la.local $t0, SysSp
+    st.d $sp, $t0, 0
     la.local $sp, ContextReg
     ld.d $r1, $sp, 0
     ld.d $r2, $sp, 8
@@ -48,7 +62,7 @@ SysSp:
     ld.d $r29, $sp, 216
     ld.d $r30, $sp, 224
     ld.d $r31, $sp, 232
-    csrrd $sp, 0x30
+    ld.d $sp, $sp, 240
 .endm
 
 .macro storeContext
@@ -84,18 +98,20 @@ SysSp:
     st.d $r29, $sp, 216
     st.d $r30, $sp, 224
     st.d $r31, $sp, 232
-    csrrd $sp, 0x30
-    csrrd $t0, 0x1
-    andi $t0, $t0, 0x3
-    beq $t0, $r0, 12
+    csrrd $t0, 0x30
+    st.d $t0, $sp, 240
     la.local $t0, SysSp
     ld.d $sp, $t0, 0
+    la.local $t0, ContextPC
+    csrrd $t1, 0x6
+    st.d $t1, $t0, 0
 .endm
 
 HandleMachineErrorEntry:
     storeContext
     bl handleMachineError
     loadContext
+    invtlb 0, $r0, $r0
     ertn
 
 HandleTLBExceptionEntry:
@@ -109,12 +125,12 @@ HandleDefaultExceptionEntry:
     storeContext
     bl handleDefaultException
     loadContext
+    invtlb 0, $r0, $r0
     ertn
 
 StartProcess:
     li.d $t0, 0x7
     csrwr $t0, 0x1
-    la.local $t0, SysSp
-    st.d $sp, $t0, 0
     loadContext
+    invtlb 0, $r0, $r0
     ertn

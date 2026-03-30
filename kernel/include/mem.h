@@ -85,7 +85,8 @@ struct PTE{
 
 class MMU {
     void *pageTable;
-    inline void setConfig(PTE* p, ZoneConfig &config);
+    void setConfig(PTE* p, ZoneConfig &config);
+    void initPTE(PTE* p);
 public:
     MMU();
     ~MMU();
@@ -122,8 +123,8 @@ public:
 
 class DirectZone : public Zone {
 public:
-    u64 Offset;
-    DirectZone(u64 vstart, u64 vend, u64 offset, ZoneConfig config): Zone(vstart, vend, config), Offset(offset){}
+    u64 Paddr;
+    DirectZone(u64 vstart, u64 vend, u64 paddr, ZoneConfig config): Zone(vstart, vend, config), Paddr(paddr){}
     virtual void OnPageFault(u64 vaddr) override;
 };
 

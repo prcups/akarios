@@ -30,13 +30,13 @@ qemu: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
 	-hda akarios.img \
-	-nographic
+	-serial stdio -s
 
 qemu-debug: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
 	-hda akarios.img \
-	-nographic -S -s
+	-serial stdio -S -s
 
 clean:
 	cd kernel && make clean

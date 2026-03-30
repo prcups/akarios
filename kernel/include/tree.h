@@ -11,13 +11,22 @@ class TNode {
 	void rotate();
 public:
 	friend class Tree<TVal>;
-	TNode(TVal *x): val(x){};
+	TNode(TVal *x);
 	~TNode() { delete val; }
 	TNode<TVal>* f;
 	TNode<TVal>* child[2];
 	TVal *val;
 	void ListNode();
 };
+
+template<typename TVal>
+TNode<TVal>::TNode(TVal* x)
+: val(x)
+{
+	f = nullptr;
+	child[0] = nullptr;
+	child[1] = nullptr;
+}
 
 template <typename TVal>
 class Tree {
@@ -31,9 +40,15 @@ public:
 	template <typename TFunc>
 	void insert(TNode<TVal>* node, TFunc check);
 	void ListTree();
+	Tree();
 	~Tree();
 };
 
+template<typename TVal>
+Tree<TVal>::Tree()
+{
+	root = nullptr;
+}
 
 template <typename TVal>
 void TNode<TVal>::rotate() {

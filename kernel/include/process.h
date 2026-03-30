@@ -69,7 +69,7 @@ class Process {
     u64 pc;
 
 public:
-    Process(u8 priority, u8 nice, void* startAddress);
+    Process(u8 priority, u8 nice, u64 startVAddress);
     ~Process();
     u16 Id;
     Process *Next;

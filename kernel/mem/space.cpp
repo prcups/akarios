@@ -8,7 +8,7 @@ void Zone::OnPageFault(u64 vaddr)
 
 void DirectZone::OnPageFault(u64 vaddr)
 {
-    space->MMUService.AddItem(vaddr, vaddr + Offset, Config);
+    space->MMUService.AddItem(vaddr, Paddr, Config);
 }
 
 MemSpace::MemSpace(u64 vStart, u64 vEnd) :VStart(vStart), VEnd(vEnd) {
