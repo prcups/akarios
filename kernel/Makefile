@@ -19,7 +19,7 @@ kernel: $(OBJS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o: %.s
+%.o: %.S
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:

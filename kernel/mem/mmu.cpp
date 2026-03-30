@@ -1,4 +1,5 @@
 #include <mem.h>
+#include <csr.h>
 
 MMU::MMU() {
     pageTable = pageAllocator.AllocPageMem(0);
@@ -95,7 +96,7 @@ u64 MMU::V2P(u64 vaddr)
 
 void MMU::SetPGDL()
 {
-    __csrwr_d((u64) pageTable, 0x19);
+    __csrwr_d((u64) pageTable, CSR_PGDL);
 }
 
 bool MMU::TryLoadTLB(u64 vaddr)

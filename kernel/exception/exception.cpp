@@ -1,23 +1,24 @@
 #include <exception.h>
+#include <csr.h>
 
 Exception::Exception() {
-    __csrwr_w((1 << 13) - 1, 0x4);
+    __csrwr_w((1 << 13) - 1, CSR_ECFG);
 }
 
 void Exception::IntOff() {
-    u32 crmd = __csrrd_w(0x0);
+    u32 crmd = __csrrd_w(CSR_CRMD);
     crmd &= (~(1u << 2));
-    __csrwr_w(crmd, 0x0);
+    __csrwr_w(crmd, CSR_CRMD);
 }
 
 void Exception::IntOn(){
-    u32 crmd = __csrrd_w(0x0);
+    u32 crmd = __csrrd_w(CSR_CRMD);
     crmd |= (1u << 2);
-    __csrwr_w(crmd, 0x0);
+    __csrwr_w(crmd, CSR_CRMD);
 }
 
 void Exception::HandleDefaultException() {
-    u64 estate = __csrrd_d(0x5);
+    u64 estate = __csrrd_d(CSR_ESTAT);
     switch (getPartical(estate, 21, 16)) {
         case 0: {
             for (u8 intrOp = 12; intrOp >= 0; --intrOp) {
@@ -87,11 +88,11 @@ void Exception::HandleDefaultException() {
                     break;
                 default:
                     uPut << "Unsupported Syscall " << ContextReg[9] << "\r\n";
-                    uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
+                    uPut << "ERA: " << (void*) __csrrd_d(CSR_ERA) << "\r\n";
                     while (1);
                     break;
             }
-            __csrwr_d(__csrrd_d(0x6) + 4, 0x6);
+            __csrwr_d(__csrrd_d(CSR_ERA) + 4, CSR_ERA);
             break;
         }
         case 0x1:
@@ -103,24 +104,24 @@ void Exception::HandleDefaultException() {
         case 0x7: {
             uPut << "**Page Invalid**\r\n";
             uPut << "ESTATE: " << (void*) estate << "\r\n";
-            uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
-            uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
-            uPut << "TLBEHI: " << (void*) __csrrd_d(0x11) << "\r\n";
+            uPut << "ERA: " << (void*) __csrrd_d(CSR_ERA) << "\r\n";
+            uPut << "BADV: " << (void*) __csrrd_d(CSR_BADV) << "\r\n";
+            uPut << "TLBEHI: " << (void*) __csrrd_d(CSR_TLBEHI) << "\r\n";
             __asm__(
                 "tlbsrch\n"
                 "tlbrd"
             );
-            uPut << "TLBIDX: " << (void*) __csrrd_d(0x10) << "\r\n";
-            uPut << "TLBELO0: " << (void*) __csrrd_d(0x12) << "\r\n";
-            uPut << "TLBELO1: " << (void*) __csrrd_d(0x13) << "\r\n";
+            uPut << "TLBIDX: " << (void*) __csrrd_d(CSR_TLBIDX) << "\r\n";
+            uPut << "TLBELO0: " << (void*) __csrrd_d(CSR_TLBELO0) << "\r\n";
+            uPut << "TLBELO1: " << (void*) __csrrd_d(CSR_TLBELO1) << "\r\n";
             while (1);
         }
         default: {
             uPut << "**Exception**\r\n";
             uPut << "ESTATE: " << (void*) estate << "\r\n";
-            uPut << "ERA: " << (void*) __csrrd_d(0x6) << "\r\n";
-            uPut << "BADV: " << (void*) __csrrd_d(0x7) << "\r\n";
-            uPut << "BADI: " << (void*) __csrrd_d(0x8) << "\r\n";
+            uPut << "ERA: " << (void*) __csrrd_d(CSR_ERA) << "\r\n";
+            uPut << "BADV: " << (void*) __csrrd_d(CSR_BADV) << "\r\n";
+            uPut << "BADI: " << (void*) __csrrd_d(CSR_BADI) << "\r\n";
             while (1);
         }
     }
@@ -129,12 +130,12 @@ void Exception::HandleDefaultException() {
 void Exception::HandleTLBException() {
     if (!processController.CurrentProcess) {
         uPut << "**Kernel Memory Error**\r\n";
-        uPut << "TLBRBADV: " << (void*) __csrrd_d(0x89) << "\r\n";
-        uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << "\r\n";
+        uPut << "TLBRBADV: " << (void*) __csrrd_d(CSR_TLBRBADV) << "\r\n";
+        uPut << "TLBRERA: " << (void*) __csrrd_d(CSR_TLBRERA) << "\r\n";
         while (1);
     }
 
-    u64 addr = __csrrd_d(0x89);
+    u64 addr = __csrrd_d(CSR_TLBRBADV);
     auto& mmu = processController.CurrentProcess->GetSpace()->MMUService;
 
     if (mmu.TryLoadTLB(addr)) {
@@ -149,7 +150,7 @@ void Exception::HandleTLBException() {
     if (zone == nullptr) {
         uPut << "**illegal address**\r\n";
         uPut << "TLBRBADV: " << (void*) addr << "\r\n";
-        uPut << "TLBRERA: " << (void*) __csrrd_d(0x8a) << "\r\n";
+        uPut << "TLBRERA: " << (void*) __csrrd_d(CSR_TLBRERA) << "\r\n";
         while (1);
     }
     zone->val->OnPageFault(addr);
@@ -157,9 +158,9 @@ void Exception::HandleTLBException() {
 
 void Exception::HandleMachineError(){
     uPut << "**Machine Error**\r\n";
-    uPut << "MERRERA: " << (void*) __csrrd_d(0x94) << "\r\n";
-    uPut << "MERRCTL: " << (void*) __csrrd_d(0x90) << "\r\n";
-    uPut << "MERRINFO1: " << (void*) __csrrd_d(0x91) << "\r\n";
-    uPut << "MERRINFO2: " << (void*) __csrrd_d(0x92) << "\r\n";
+    uPut << "MERRERA: " << (void*) __csrrd_d(CSR_MERRERA) << "\r\n";
+    uPut << "MERRCTL: " << (void*) __csrrd_d(CSR_MERRCTL) << "\r\n";
+    uPut << "MERRINFO1: " << (void*) __csrrd_d(CSR_MERRINFO1) << "\r\n";
+    uPut << "MERRINFO2: " << (void*) __csrrd_d(CSR_MERRINFO2) << "\r\n";
     while (1);
 }

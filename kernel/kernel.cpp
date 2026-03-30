@@ -9,6 +9,7 @@
 #include <process.h>
 #include <disk.h>
 #include <list.h>
+#include "include/csr.h"
 
 UART uPut((u8 *)(0x800000001fe001e0llu));
 Exception SysException;
@@ -49,16 +50,16 @@ inline void invokeInit() {
 }
 
 inline void initMem() {
-    __csrwr_d(0x13E4D52C, 0x1C);
-    __csrwr_d(0x267, 0x1D);
-    __csrwr_d(0xC, 0x1E);
+    __csrwr_d(0x13E4D52C, CSR_PWCL);
+    __csrwr_d(0x267, CSR_PWCH);
+    __csrwr_d(0xC, CSR_STLBPS);
 }
 
 inline void initException() {
     extern void *HandleDefaultExceptionEntry, *HandleMachineErrorEntry, *HandleTLBExceptionEntry;
-    __csrwr_d((u64)&HandleDefaultExceptionEntry, 0xC);
-    __csrwr_d((u64)&HandleTLBExceptionEntry, 0x88);
-    __csrwr_d((u64)&HandleMachineErrorEntry, 0x93);
+    __csrwr_d((u64)&HandleDefaultExceptionEntry, CSR_EENTRY);
+    __csrwr_d((u64)&HandleTLBExceptionEntry, CSR_TLBRENTRY);
+    __csrwr_d((u64)&HandleMachineErrorEntry, CSR_MERRENTRY);
 
     SysException.IntOn();
 }

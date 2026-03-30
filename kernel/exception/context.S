@@ -11,6 +11,8 @@
 .extern handleDefaultException
 .extern handleTLBException
 
+#include <csr.h>
+
 .data
 ContextReg:
 .fill 32, 8, 0
@@ -25,10 +27,10 @@ SysSp:
 .macro loadContext
     la.local $t0, ContextPC
     ld.d $t1, $t0, 0
-    csrwr $t1, 0x6
+    csrwr $t1, CSR_ERA
     la.local $t0, ContextID
     ld.d $t1, $t0, 0
-    csrwr $t1, 0x18
+    csrwr $t1, CSR_ASID
     la.local $t0, SysSp
     st.d $sp, $t0, 0
     la.local $sp, ContextReg
@@ -66,7 +68,7 @@ SysSp:
 .endm
 
 .macro storeContext
-    csrwr $sp, 0x30
+    csrwr $sp, CSR_SAVE0
     la.local $sp, ContextReg
     st.d $r1, $sp, 0
     st.d $r2, $sp, 8
@@ -98,12 +100,12 @@ SysSp:
     st.d $r29, $sp, 216
     st.d $r30, $sp, 224
     st.d $r31, $sp, 232
-    csrrd $t0, 0x30
+    csrrd $t0, CSR_SAVE0
     st.d $t0, $sp, 240
     la.local $t0, SysSp
     ld.d $sp, $t0, 0
     la.local $t0, ContextPC
-    csrrd $t1, 0x6
+    csrrd $t1, CSR_ERA
     st.d $t1, $t0, 0
 .endm
 
@@ -130,7 +132,7 @@ HandleDefaultExceptionEntry:
 
 StartProcess:
     li.d $t0, 0x7
-    csrwr $t0, 0x1
+    csrwr $t0, CSR_PRMD
     loadContext
     invtlb 0, $r0, $r0
     ertn
