@@ -8,6 +8,7 @@ SOURCES = $(wildcard kernel.cpp \
 			 exception/*.cpp \
 			 process/*.cpp \
 			 driver/*.cpp \
+			 fs/*.cpp \
 	   )
 
 OBJS = loader.o exception/context.o $(SOURCES:%.cpp=%.o)

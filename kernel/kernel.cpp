@@ -9,6 +9,9 @@
 #include <process.h>
 #include <disk.h>
 #include <list.h>
+#include <sdcard.h>
+#include <fat32.h>
+#include <gpt.h>
 #include "include/csr.h"
 
 UART uPut((u8 *)(0x800000001fe001e0llu));
@@ -22,6 +25,7 @@ ACPIManager acpiManager;
 PCIEDeviceManager pcieDeviceManager;
 
 ListItem<Disk*> *diskList = nullptr;
+ListItem<FileSystem*> *fsList = nullptr;
 
 extern "C" void StartProcess();
 
@@ -64,38 +68,31 @@ inline void initException() {
     SysException.IntOn();
 }
 
-alignas(8192) void proc1_exec() {
-    char ch = 'A';
-	char *s = &ch;
-loop1:
-    __asm__ (
-        "li.d $a0, 1\n\t"
-        "ld.d $a1, %0\n\t"
-        "li.d $a2, 1\n\t"
-        "li.d $a7, 64\n\t"
-        "syscall 0\n\t"
-        ::"m"(s)
-        :"memory", "$a0", "$a1", "$a2", "$a7"
-    );
-    for (int i = 0; i < 10000; ++i);
-    goto loop1;
-}
+void printTestFile() {
+    if (fsList == nullptr) {
+        diskList == nullptr ? uPut << "NO DISK\n" : uPut << "NO FS\n";
+        return;
+    }
 
-alignas(8192) void proc2_exec() {
-    char ch = 'B';
-    char *s = &ch;
-loop2:
-    __asm__ (
-        "li.d $a0, 1\n\t"
-        "ld.d $a1, %0\n\t"
-        "li.d $a2, 1\n\t"
-        "li.d $a7, 64\n\t"
-        "syscall 0\n\t"
-        ::"m"(s)
-        :"memory", "$a0", "$a1", "$a2", "$a7"
-    );
-    for (int i = 0; i < 10000; ++i);
-    goto loop2;
+    FileSystem *fs = fsList->Val;
+    fs->Mount();
+
+    FileHandle file;
+    KernelUtil::Memset(&file, 0, sizeof(file));
+    if (fs->Open("/test.txt", &file) != (int)FsError::Ok) {
+        uPut << "Failed to open /test.txt\n";
+        return;
+    }
+
+    uPut << "/test.txt:\n";
+    u8 buf[512];
+    int bytesRead;
+    while ((bytesRead = fs->Read(&file, buf, sizeof(buf))) > 0) {
+        for (int i = 0; i < bytesRead; ++i) {
+            uPut << (char)buf[i];
+        }
+    }
+    uPut << '\n';
 }
 
 extern "C" void KernelMain(BootInfo info) {
@@ -106,16 +103,13 @@ extern "C" void KernelMain(BootInfo info) {
     acpiManager.Init(info.XsdpPtr);
     pcieDeviceManager.Init();
 
-    Process *proc1, *proc2;
-    proc1 = new Process(0, 0, 0x100000);
-    proc2 = new Process(0, 0, 0x100000);
-    processController.InsertProcess(proc1);
-    proc1->GetSpace()->AddZone(new TNode<Zone>(new DirectZone(0x100000, 0x200000, (u64) proc1_exec, ZoneConfig{1, 3, 0, 0, 0, 0})));
-    processController.InsertProcess(proc2);
-    proc2->GetSpace()->AddZone(new TNode<Zone>(new DirectZone(0x100000, 0x200000, (u64) proc2_exec, ZoneConfig{1, 3, 0, 0, 0, 0})));
+    for (ListItem<Disk*> *item = diskList; item != nullptr; item = item->Next) {
+        ScanDiskFileSystems(item->Val, &fsList);
+    }
+    printTestFile();
 
-    SysTimer.TimerOn();
-    StartProcess();
+    //SysTimer.TimerOn();
+    //StartProcess();
 
     while (1);
 }

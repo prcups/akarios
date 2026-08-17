@@ -30,13 +30,19 @@ qemu: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
 	-hda akarios.img \
-	-serial stdio -s
+	-device ahci,id=ahci0 \
+	-drive id=disk0,file=disk.img,if=none \
+	-device ide-hd,drive=disk0,bus=ahci0.0 \
+	-nographic
 
 qemu-debug: img
 	qemu-system-loongarch64 \
 	-bios /usr/share/qemu/edk2-loongarch64-code.fd \
 	-hda akarios.img \
-	-serial stdio -S -s
+	-device ahci,id=ahci0 \
+	-drive id=disk0,file=disk.img,if=none \
+	-device ide-hd,drive=disk0,bus=ahci0.0 \
+	-nographic -S -s
 
 clean:
 	cd kernel && make clean

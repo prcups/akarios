@@ -1,10 +1,10 @@
 #include <process.h>
 
 ELFProgram::ELFProgram(const char* filename) {
-    file *f = new file;
-    //open(filename, f);
+    FileHandle *f = new FileHandle;
+    //fs->Open(filename, f);
     char *p = new char [f->size];
-    //read(f, (u8 *) p ,f->size);
+    //fs->Read(f, (u8 *) p ,f->size);
 
     header = (ELFHeader*) p;
     if (header->MagicNum == 0x464C457F) {

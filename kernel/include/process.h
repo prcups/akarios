@@ -4,20 +4,24 @@
 #include <mem.h>
 #include <exception.h>
 #include <larchintrin.h>
-#include <fat32.h>
+#include <filesystem.h>
 
 const u16 prioRatios[8] = { 100, 200, 300, 400, 500, 600, 700, 800 };
 
+class FileSystem;
+
 class FileTable {
     u64 processFd = 2;
-    file sdFile[100];
+    FileHandle fileTable[OPEN_FILE_NUM];
+    FileSystem *fs = nullptr;
 public:
+    void SetFileSystem(FileSystem *fileSystem) { fs = fileSystem; }
     u64 Open(const char *filePath);
     void Close(u64 fd);
     int Read(u64 fd, u8* buf, u64 size);
     int Write(u64 fd, u8* buf, u64 size);
     int Getcwd(u8* buf, u64 size);
-    int Chdir(u8*buf);
+    int Chdir(u8* buf);
 };
 
 struct ELFHeader {

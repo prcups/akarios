@@ -333,7 +333,7 @@ class SATADisk : public Disk {
 	void start_cmd();
 	void stop_cmd();
 	int find_cmdslot();
-	void rw_disk(unsigned short blocknr, char *buf, int rw);
+	void rw_disk(u64 blocknr, char *buf, int rw);
 public:
 	SATADisk(HBA_MEM* abar, u8 portno);
 	void Read(u64 blockNum, char *buf) override;

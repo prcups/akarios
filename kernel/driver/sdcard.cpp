@@ -1,5 +1,13 @@
 #include <sdcard.h>
 
+void SDCard::Read(u64 blockNum, char *buf) {
+    ReadBlock(blockNum, buf);
+}
+
+void SDCard::Write(u64 blockNum, char *buf) {
+    WriteBlock(blockNum, buf);
+}
+
 SDCard::SDCard(void* addr, void* dma): baseAddress((u32 *)addr), dmaAddress((u32 *) dma) {
     *(baseAddress) = 1;
     *(baseAddress + 1) = 1;

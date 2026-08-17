@@ -144,7 +144,7 @@ int SATADisk::find_cmdslot()
 	return -1;
 }
 
-void SATADisk::rw_disk(unsigned short blocknr, char *buf, int rw)
+void SATADisk::rw_disk(u64 blocknr, char *buf, int rw)
 {
 	port->is = 0xFFFFFFFF;		// Clear pending interrupt bits
 	int slot = find_cmdslot();
@@ -173,8 +173,8 @@ void SATADisk::rw_disk(unsigned short blocknr, char *buf, int rw)
 	cmdfis->device = 1<<6;	// LBA mode
 
 	cmdfis->lba3 = (unsigned char)(blocknr>>24);
-	cmdfis->lba4 = 0;
-	cmdfis->lba5 = 0;
+	cmdfis->lba4 = (unsigned char)(blocknr>>32);
+	cmdfis->lba5 = (unsigned char)(blocknr>>40);
 
 	cmdfis->countl = 1 & 0xFF;
 	cmdfis->counth = (0 >> 8) & 0xFF;
